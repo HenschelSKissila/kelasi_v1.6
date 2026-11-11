@@ -18,6 +18,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
   navigator.serviceWorker.register('/sw.js').then(async registration => {
     await registration.update().catch(() => {});
+    // Vérifie aussi les nouvelles versions quand l'app revient au premier plan (PWA installée).
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') registration.update().catch(() => {}); });
     if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     registration.addEventListener('updatefound', () => {
       const installing = registration.installing;
