@@ -403,3 +403,4 @@ button.bank-balance-card { width: 100%; border: 0; color: inherit; font: inherit
   .xp-statement tbody td:nth-child(5)::before{content:'cumul '}
   .xp-statement tfoot tr{background:var(--surface-2)}
 }
+.xp-statement thead th:first-child{text-transform:uppercase}

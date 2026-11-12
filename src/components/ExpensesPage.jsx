@@ -12,7 +12,7 @@ const money = n => new Intl.NumberFormat('fr-FR', { style: 'currency', currency:
 const monthLabel = month => new Date(`${month}-01T12:00:00`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 function dayLabel(date) {
   const t = today(), y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (date === t) return "Aujourd'hui";
+  if (date === t) return "Aujourd’hui";
   if (date === y) return 'Hier';
   const s = new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -25,7 +25,7 @@ function CatIcon({ category, type, size = 22 }) {
   if (Icon) return <Icon size={size} strokeWidth={1.8}/>;
   return category?.icon && category.icon !== '•' ? <span className="xp-glyph">{category.icon}</span> : <Tag size={size} strokeWidth={1.8}/>;
 }
-const shortDay = date => new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).replace('.', '').toUpperCase();
+const shortDay = date => new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase();
 const weekday = date => { const s = new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
 const timeOf = t => { const c = String(t.created_at || ''); return c.length > 16 && !c.includes('T00:00:00') ? new Date(c).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''; };
 const inPeriodLocal = (date, period) => !period || String(date || '').startsWith(period);
@@ -49,7 +49,7 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
   const [month, setMonth] = useState(today().slice(0, 7));
   const [mode, setMode] = useState('month'); // 'month' | 'year' | 'all'
   const period = mode === 'month' ? month : mode === 'year' ? month.slice(0, 4) : '';
-  const periodLabel = mode === 'month' ? monthLabel(month) : mode === 'year' ? `Année ${month.slice(0, 4)}` : "Tout l'historique";
+  const periodLabel = mode === 'month' ? monthLabel(month) : mode === 'year' ? `Année ${month.slice(0, 4)}` : "Tout l’historique";
   const [catFilter, setCatFilter] = useState(null);
   const [breakdown, setBreakdown] = useState(null); // 'expense' | 'income'
   const shiftPeriod = delta => setMonth(m => mode === 'year' ? shiftMonth(m, 12 * delta) : shiftMonth(m, delta));
@@ -196,7 +196,7 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
       <ul className="xp-list">{data.accounts.map(a => <li key={a.id}><button className="xp-row" onClick={() => setAccountForm({ ...a, initialBalance: String(a.initialBalance ?? 0) })}><span className="xp-icon" style={{ background: 'var(--green-soft)', color: 'var(--green)' }}><Wallet size={17}/></span><span className="xp-main"><strong>{a.name}</strong><small>{a.type}</small></span><span className={`xp-amount ${(balances[a.id] || 0) < 0 ? 'neg' : ''}`}>{money(balances[a.id] || 0)}</span></button></li>)}</ul>
       {data.accounts.length === 0 && <p className="xp-muted">Ajoute un premier compte (espèces, banque…) pour noter tes opérations.</p>}
       <div className="xp-import">
-        <div><strong>Importer d'anciennes opérations</strong><small>Fichier JSON avec dates, heures, catégories et notes. Un aperçu s'affiche avant l'enregistrement.</small></div>
+        <div><strong>Importer d’anciennes opérations</strong><small>Fichier JSON avec dates, heures, catégories et notes. Un aperçu s’affiche avant l’enregistrement.</small></div>
         <label className="btn-primary"><Upload size={15}/> Importer un fichier JSON<input type="file" accept="application/json,.json" hidden onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) readImportFile(f); }}/></label>
         <a className="btn-secondary" href="/modele-import-depenses.json" download="modele-import-depenses.json"><Download size={15}/> Télécharger le modèle</a>
       </div>
@@ -245,7 +245,7 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
     {form && <TransactionModal form={form} setForm={setForm} data={data} cats={cats} onSave={saveTransaction} onDelete={removeTransaction}/>}
     {accountForm && <Sheet title={accountForm.id ? 'Modifier le compte' : 'Nouveau compte'} onClose={() => setAccountForm(null)}>
       <form className="xp-form" onSubmit={e => { e.preventDefault(); if (accountForm.name.trim()) saveAccount({ ...accountForm, name: accountForm.name.trim(), initialBalance: Number(String(accountForm.initialBalance).replace(',', '.')) || 0 }); }}>
-        {!data.accounts.length && <p className="xp-muted">Crée d'abord un compte pour y rattacher tes opérations.</p>}
+        {!data.accounts.length && <p className="xp-muted">Crée d’abord un compte pour y rattacher tes opérations.</p>}
         <label>Nom<input autoFocus required value={accountForm.name} onChange={e => setAccountForm({ ...accountForm, name: e.target.value })}/></label>
         <label>Type<select value={accountForm.type} onChange={e => setAccountForm({ ...accountForm, type: e.target.value })}>{[...new Set([...ACCOUNT_TYPES, accountForm.type])].map(t => <option key={t}>{t}</option>)}</select></label>
         <label>Solde initial (€)<input inputMode="decimal" value={accountForm.initialBalance} onChange={e => setAccountForm({ ...accountForm, initialBalance: e.target.value })}/></label>
@@ -261,7 +261,7 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
     </Sheet>}
     {recurrenceForm && <Sheet title="Nouvelle récurrence" onClose={() => setRecurrenceForm(null)}>
       <form className="xp-form" onSubmit={e => { e.preventDefault(); const amount = Number(String(recurrenceForm.amount).replace(',', '.')); if (recurrenceForm.name.trim() && amount > 0 && recurrenceForm.accountId) saveRecurrence({ ...recurrenceForm, name: recurrenceForm.name.trim(), amount }); }}>
-        {!data.accounts.length && <p className="xp-muted">Ajoute d'abord un compte dans l'onglet Comptes.</p>}
+        {!data.accounts.length && <p className="xp-muted">Ajoute d’abord un compte dans l’onglet Comptes.</p>}
         <label>Nom<input autoFocus required placeholder="Loyer, abonnement…" value={recurrenceForm.name} onChange={e => setRecurrenceForm({ ...recurrenceForm, name: e.target.value })}/></label>
         <label>Montant (€)<input required inputMode="decimal" value={recurrenceForm.amount} onChange={e => setRecurrenceForm({ ...recurrenceForm, amount: e.target.value })}/></label>
         <label>Fréquence<select value={recurrenceForm.frequency} onChange={e => setRecurrenceForm({ ...recurrenceForm, frequency: e.target.value })}><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option><option value="annual">Chaque année</option></select></label>
@@ -321,7 +321,7 @@ function TransactionModal({ form, setForm, data, cats, onSave, onDelete }) {
   const set = patch => setForm({ ...form, ...patch });
   const amount = Number(String(form.amount).replace(',', '.'));
   const valid = amount > 0 && form.accountId && form.date && (form.type !== 'transfer' || (form.destinationAccountId && form.destinationAccountId !== form.accountId));
-  return <Sheet title={form.id ? "Modifier l'opération" : 'Nouvelle opération'} onClose={() => setForm(null)}>
+  return <Sheet title={form.id ? "Modifier l’opération" : 'Nouvelle opération'} onClose={() => setForm(null)}>
     <form className="xp-form" onSubmit={e => { e.preventDefault(); if (valid) onSave(form); }}>
       <div className="xp-type">{TYPES.map(([id, label]) => <button type="button" key={id} className={`${form.type === id ? 'active' : ''} t-${id}`} onClick={() => { const allowed = categoriesForType(cats, id); set({ type: id, categoryId: id === 'transfer' ? '' : allowed.some(c => c.id === form.categoryId) ? form.categoryId : (id === 'expense' ? allowed[0]?.id || '' : '') }); }}>{label}</button>)}</div>
       <label className={`xp-amount-input t-${form.type}`}><span>€</span><input autoFocus required inputMode="decimal" placeholder="0,00" value={form.amount} onChange={e => set({ amount: e.target.value.replace(/[^\d.,]/g, '') })} aria-label="Montant en euros"/></label>
@@ -345,7 +345,7 @@ function Analyse({ data, period, periodLabel, cats, budgets, upcoming, onBudgets
   const statement = monthlyStatement(data.transactions, period);
   const maxBar = Math.max(1, ...statement.map(m => Math.max(m.income, m.expenses)));
   const sum = statement.reduce((s, m) => ({ income: s.income + m.income, expenses: s.expenses + m.expenses }), { income: 0, expenses: 0 });
-  const shortMonth = m => new Date(`${m}-01T12:00:00`).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }).replace('.', '');
+  const shortMonth = m => new Date(`${m}-01T12:00:00`).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
   const barsRef = useRef(null);
   useEffect(() => { const el = barsRef.current; if (el) el.scrollLeft = el.scrollWidth; }, [statement.length, period]);
   return <div className="xp-analyse">
