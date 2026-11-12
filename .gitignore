@@ -5,3 +5,6 @@ dist/
 !.env.example
 *.tmp
 .DS_Store
+
+# Captures d’écran de test (jamais dans le dépôt)
+/*.png
