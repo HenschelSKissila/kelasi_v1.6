@@ -33,6 +33,7 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
   ['epargne','Épargne','#0e8f6c','piggy','both'],
   ['emprunt-x','Emprunt à X','#3f86c6','borrow','both'],
   ['pret-x','Prêt à X','#c7783f','lend','both'],
+  ['transfert','Transfert','#5795df','transfer','both'],
   ['autre','Autre','#87929a','tag','both']
 ].map(([id,name,color,iconKey,kind,parentId])=>({id,name,color,iconKey,kind,parentId:parentId||null,icon:'',deleted:false}));
 const DEFAULT_BY_ID = new Map(DEFAULT_EXPENSE_CATEGORIES.map(c => [c.id, c]));
@@ -48,9 +49,14 @@ export function upgradeCategories(categories=[], deletedIds=[]){
 /** Ordre d'affichage : parent puis ses sous-catégories, dans l'ordre de la liste. */
 export function orderedCategories(categories=[]){const list=categories.filter(c=>!c.deleted),ids=new Set(list.map(c=>c.id)),roots=list.filter(c=>!c.parentId||!ids.has(c.parentId));return roots.flatMap(r=>[r,...list.filter(c=>c.parentId===r.id)]);}
 export function categoriesForType(categories=[],type='expense'){return orderedCategories(categories).filter(c=>type==='transfer'?false:(c.kind||'both')==='both'||c.kind===type);}
+// Comptes proposés par défaut dans Dépenses (ajoutés s'ils n'existent pas déjà sous ce nom).
+export const DEFAULT_ACCOUNTS = [['especes','Espèces','Espèces'],['n26','N26','Banque'],['sparkasse','Sparkasse','Banque'],['commerzbank','Commerzbank','Banque'],['wise','Wise','Banque'],['revolut','Revolut','Banque']]
+  .map(([id,name,type])=>({id,name,type,initialBalance:0,currency:'EUR'}));
+const accountKey=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+export function upgradeAccounts(accounts=[],deletedIds=[]){const deleted=new Set(deletedIds),names=new Set(accounts.map(a=>accountKey(a.name))),ids=new Set(accounts.map(a=>a.id));const out=[...accounts];for(const def of DEFAULT_ACCOUNTS)if(!ids.has(def.id)&&!names.has(accountKey(def.name))&&!deleted.has(`accounts:${def.id}`))out.push({...def});return out;}
 export function blankDepenses(){ return {accounts:[],categories:DEFAULT_EXPENSE_CATEGORIES.map(x=>({...x})),transactions:[],recurrences:[],budgets:[],deletedDepenseIds:[]}; }
 const asArray = x => Array.isArray(x) ? x : [];
-export function normalizeDepenses(value={}){const input=value&&typeof value==='object'?value:{},d={...blankDepenses(),...input};d.accounts=asArray(input.accounts??input.comptes);delete d.comptes;for(const k of DEPENSES_KEYS)d[k]=asArray(d[k]);d.deletedDepenseIds=[...new Set(asArray(d.deletedDepenseIds).map(key=>typeof key==='string'&&key.startsWith('comptes:')?`accounts:${key.slice(8)}`:key))];d.categories=upgradeCategories(d.categories,d.deletedDepenseIds);return d;}
+export function normalizeDepenses(value={}){const input=value&&typeof value==='object'?value:{},d={...blankDepenses(),...input};d.accounts=asArray(input.accounts??input.comptes);delete d.comptes;for(const k of DEPENSES_KEYS)d[k]=asArray(d[k]);d.deletedDepenseIds=[...new Set(asArray(d.deletedDepenseIds).map(key=>typeof key==='string'&&key.startsWith('comptes:')?`accounts:${key.slice(8)}`:key))];d.categories=upgradeCategories(d.categories,d.deletedDepenseIds);d.accounts=upgradeAccounts(d.accounts,d.deletedDepenseIds);return d;}
 export function calculateAccountBalances(accounts=[],transactions=[]){const totals=new Map(asArray(accounts).map(a=>[a.id,Number(a.initialBalance)||0]));for(const t of asArray(transactions)){const amount=Math.abs(Number(t.amount)||0);if(t.type==='income')totals.set(t.accountId,(totals.get(t.accountId)||0)+amount);else if(t.type==='expense')totals.set(t.accountId,(totals.get(t.accountId)||0)-amount);else if(t.type==='transfer'){totals.set(t.accountId,(totals.get(t.accountId)||0)-amount);if(t.destinationAccountId)totals.set(t.destinationAccountId,(totals.get(t.destinationAccountId)||0)+amount);}}return Object.fromEntries(totals);}
 export function totalAccountBalance(accounts=[],transactions=[]){return Object.values(calculateAccountBalances(accounts,transactions)).reduce((s,n)=>s+n,0);}
 export function monthlyTotals(transactions=[],month){return asArray(transactions).filter(t=>(t.date||'').slice(0,7)===month).reduce((o,t)=>{if(t.type==='expense')o.expenses+=Number(t.amount)||0;if(t.type==='income')o.income+=Number(t.amount)||0;return o;},{income:0,expenses:0});}

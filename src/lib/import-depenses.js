@@ -40,7 +40,8 @@ const CATEGORY_ALIASES = {
   epargne: ['epargne', 'speichern', 'sparen', 'savings'],
   'emprunt-x': ['emprunt a x', 'emprunt'],
   'pret-x': ['pret a x', 'pret'],
-  autre: ['autre', 'autres', 'sonstiges', 'other']
+  transfert: ['transfert', 'transfer', 'einziehung', 'virement interne'],
+  autre: ['autre', 'autres', 'divers', 'sonstiges', 'other']
 };
 const ACCOUNT_ALIASES = { especes: ['especes', 'espece', 'cash', 'bargeld', 'liquide'] };
 const TYPE_ALIASES = {

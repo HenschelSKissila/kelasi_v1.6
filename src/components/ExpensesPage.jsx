@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Trash2, Wallet, ArrowLeftRight, CalendarClock, ChevronLeft, ChevronRight, Search, X, ArrowDownLeft, Pencil, ShoppingCart, House, Car, HeartPulse, Ticket, Zap, UtensilsCrossed, Tag, CircleMinus, CirclePlus } from 'lucide-react';
 import { aggregateByCategory, budgetProgress, calculateAccountBalances, categoriesForType, groupTransactionsByDay, monthlyTotals, orderedCategories, shiftMonth, totalAccountBalance, upcomingPayments } from '../lib/depenses.js';
 import { CATEGORY_ICON_SET, categoryIcon } from '../lib/category-icons.js';
@@ -48,6 +48,8 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
   const [month, setMonth] = useState(today().slice(0, 7));
   const [tab, setTab] = useState(TAB_ALIASES[initialTab] || initialTab);
   const [filter, setFilter] = useState('all');
+  const tabsRef = useRef(null);
+  useEffect(() => { tabsRef.current?.querySelector('.active')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); }, [tab]);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [form, setForm] = useState(null);
@@ -145,7 +147,7 @@ export default function ExpensesPage({ value, onChange, initialTab = 'journal' }
       </div>
     </div>
 
-    <nav className="xp-tabs" aria-label="Sections des dépenses">{TABS.map(([id, label]) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>{label}</button>)}</nav>
+    <nav className="xp-tabs" ref={tabsRef} aria-label="Sections des dépenses">{TABS.map(([id, label]) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>{label}</button>)}</nav>
 
     {tab === 'journal' && <section className="xp-journal">
       <div className="xp-filters">

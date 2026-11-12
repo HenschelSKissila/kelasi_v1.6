@@ -15,7 +15,8 @@ test('le modèle fourni s’importe entièrement sans erreur', () => {
   assert.equal(elec.categoryId, 'electricite'); assert.equal(elec.type, 'expense');
   const transfer = data.transactions.find(t => t.type === 'transfer');
   assert.ok(transfer.destinationAccountId && transfer.destinationAccountId !== transfer.accountId);
-  assert.deepEqual(report.newAccounts.sort(), ['Banque Postale', 'Espèces', 'Max Card']);
+  assert.deepEqual(report.newAccounts.sort(), ['Banque Postale', 'Max Card']); // « Espèces » existe déjà par défaut
+  assert.ok(data.accounts.some(a => a.id === 'especes' && data.transactions.some(t => t.accountId === 'especes')));
 });
 
 test('réimporter le même fichier n’ajoute pas de doublons', () => {
